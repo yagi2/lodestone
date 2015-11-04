@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="UTF-8">
+	<title>FINALFANTASY XIV, The Lodestone Diff Tool</title>
+  
+	<link rel="stylesheet" href="css/webkoruri-force.css"></link>
+	<link rel="stylesheet" href="css/style.css"></link>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+	<script src="js/jquery.xdomainajax.js"></script>
+  
+  	<script>
+		// ページ開かれた時（テキストボックスの初期値クリア処理含）
+		jQuery(document).ready(function(){
+			document.getElementById("userdata2").style.display="none";
+			getLodestoneInfo(4);
+ 			var textBox = jQuery("input:text");
+ 			textBox.focus(function(){
+				jQuery(this).addClass("textFocus");
+				if(this.value == this.defaultValue){
+					jQuery(this).val('');
+				}
+			}).blur(function(){
+ 				if(jQuery(this).val() == ''){
+					jQuery(this).val(this.defaultValue).removeClass("textFocus");
+				}
+			});
+		});
+		
+		// LodeStoneから情報を引っ張ってスクレイピングするメソッド
+		// 0...左側更新（右側表示時 非表示に） 
+		// 1...比較表示（右側出現） 
+		// 2...比較時右側更新 
+		// 3...比較時左側更新  
+		// 4...初期表示（ページ読み込み時）に戻る
+		function getLodestoneInfo(display_num) {
+			if(!(display_num == 0 || display_num == 4)) {
+				document.getElementById("userdata2").style.display="block";
+			}
+			else {
+				document.getElementById("userdata2").style.display="none";
+			}
+			if (display_num == 0 || display_num == 1) { 
+        		url = document.forms.id_form1.id_textBox1.value;
+			}
+			else if (display_num == 4){
+				url = 'http://jp.finalfantasyxiv.com/lodestone/character/8936451/';
+			}
+			else {
+				url = document.forms.id_form2.id_textBox2.value;
+			}
+			
+			$.get(url, function(data){
+				ch_name = $(data.responseText).find('.player_name_txt h2 a').text();
+				ch_url = $(data.responseText).find('.player_name_txt h2 a').attr('href');
+			
+				var icon_paths = new Array();
+				icon = $(data.responseText).find('.chara_profile_box dl dt img').each (function() {
+					icon_paths.push($(this).attr('src'));
+				});
+				
+				var ch_info_texts = new Array();
+				ch_info = $(data.responseText).find('.chara_profile_box dl dd').each(function() {
+					ch_info_texts.push($(this));
+				});
+			
+				var ch_info_paths = new Array();
+				ch_info_paths = $(data.responseText).find('.chara_profile_box dl dd a').attr('href');
+				
+				ch_img = $(data.responseText).find('.bg_chara_264 img').attr('src');
+				
+				var ch_levels = new Array();
+				ch_level = $(data.responseText).find('.level').each(function() {
+					ch_levels.push($(this).text().substr(6));
+				});
+				
+				var ch_class_icons = new Array();
+				ch_class_icon = $(data.responseText).find('.ic_class_wh24_box img').each(function() {
+					ch_class_icons.push($(this).attr('src'));
+				});
+				
+				ch_title = $(data.responseText).find('.chara_title').text();
+				
+				var class_box_txts = new Array();
+				classes = $(data.responseText).find('.ic_class_box li img').each(function() {
+					class_box_txts.push($(this).attr('src'));
+				});
+				var class_box_imgs = new Array();
+				classes = $(data.responseText).find('.ic_class_box li').each(function() {
+					class_box_imgs.push($(this).text());
+				});
+				base_class_imgs = class_box_txts;
+				base_class_levels = class_box_imgs;
+				
+				var class_box_txts = new Array();
+				classes = $(data.responseText).find('.ic_class_box2 li img').each(function() {
+					class_box_txts.push($(this).attr('src'));
+				});
+				var class_box_imgs = new Array();
+				classes = $(data.responseText).find('.ic_class_box2 li').each(function() {
+					class_box_imgs.push($(this).text());
+				});
+				ecg_class_imgs = class_box_txts;
+				ecg_class_levels = class_box_imgs;
+				
+				if (display_num == 0 || display_num == 3 || display_num == 4) {
+					$('#character_img').html("<img src=\""+ch_img+"\" width=\"30%\" height=\"30%\">");
+					$('#start_town_logo').html("<a href=\"http://jp.finalfantasyxiv.com"+ch_url+"\">"+"<img src=\""+icon_paths[1]+"\">"+"</a>");
+					$('#character_name').html(ch_name+"<br><span style=\"font-size : 0.7em;\">"+"<a href=\"http://jp.finalfantasyxiv.com"+ch_info_paths+"\">"+ch_info_texts[9].text()+"</a></span>");
+					$('#character_current_class_icon').html("<img src=\""+ch_class_icons[0]+"\">");
+					$('#character_level').html(ch_levels[0]);
+					$('#spirit_logo').html(icon[0]);
+					$('#spirit_txt').html(ch_info_texts[1].text()+" "+ ch_info_texts[3].text());
+					$('#grandcompany_logo').html(icon[2]);
+					$('#grandcompany_txt').html(ch_info_texts[7].text());
+					$('#character_title').html(ch_title);
+				
+					$('#fighter_classes').html(
+						"<table class='chtb'><tr><th width=\"37\" height=\"21\">FIGHTER</th><td class='sicon'><img src=\"" + base_class_imgs[0] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + base_class_levels[0] + "</td><td class='sicon'><img src=\"" + base_class_imgs[1] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + base_class_levels[1] + "</td><td class='sicon'><img src=\"" + base_class_imgs[2] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + base_class_levels[2] + "</td><td class='sicon'><img src=\"" + base_class_imgs[3] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + base_class_levels[3] + "</td></tr><tr><th></th><td class='sicon'><img src=\"" + base_class_imgs[4] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + base_class_levels[4] + "</td><td class='sicon'><img src=\"" + base_class_imgs[5] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + base_class_levels[5] + "</td></tr></table>"
+					);
+					$('#sorcerer_classes').html(
+						"<table class='chtb'><tr><th>SORCERER</th><td class='sicon'><img src=\"" + base_class_imgs[6] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + base_class_levels[6] + "</td><td class='sicon'><img src=\"" + base_class_imgs[7] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + base_class_levels[7] + "</td><td class='sicon'><img src=\"" + base_class_imgs[8] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + base_class_levels[8] + "</td></tr></table>"
+					);
+					$('#extra_jobs').html(
+						"<table class='chtb'><tr><th>EXTRA JOB</th><td class='sicon'><img src=\"" + ecg_class_imgs[0] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + ecg_class_levels[0] + "</td><td class='sicon'><img src=\"" + ecg_class_imgs[1] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + ecg_class_levels[1] + "</td><td class='sicon'><img src=\"" + ecg_class_imgs[2] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + ecg_class_levels[2] + "</td></tr></table>"
+					);
+					$('#crafter_classes').html(
+						"<table class='chtb'><tr><th>CRAFTER</th><td class='sicon'><img src=\"" + ecg_class_imgs[3] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + ecg_class_levels[3] + "</td><td class='sicon'><img src=\"" + ecg_class_imgs[4] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + ecg_class_levels[4] + "</td><td class='sicon'><img src=\"" + ecg_class_imgs[5] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + ecg_class_levels[5] + "</td><td class='sicon'><img src=\"" + ecg_class_imgs[6] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + ecg_class_levels[6] + "</tr></tr><tr><th></th><td class='sicon'><img src=\"" + ecg_class_imgs[7] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + ecg_class_levels[7] + "</td><td class='sicon'><img src=\"" + ecg_class_imgs[8] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + ecg_class_levels[8] + "</td><td class='sicon'><img src=\"" + ecg_class_imgs[9] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + ecg_class_levels[9] + "</td><td class='sicon'><img src=\"" + ecg_class_imgs[10] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + ecg_class_levels[10] + "</td></tr></table>"
+					);
+					$('#gatherer_classes').html(
+					"<table class='chtb'><tr><th>EXTRA JOB</th><td class='sicon'><img src=\"" + ecg_class_imgs[11] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + ecg_class_levels[11] + "</td><td class='sicon'><img src=\"" + ecg_class_imgs[12] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + ecg_class_levels[12] + "</td><td class='sicon'><img src=\"" + ecg_class_imgs[13] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + ecg_class_levels[13] + "</td></tr></table>"
+					);
+				}
+				else {
+					$('#character_img2').html("<img src=\""+ch_img+"\" width=\"30%\" height=\"30%\">");
+					$('#start_town_logo2').html("<a href=\"http://jp.finalfantasyxiv.com"+ch_url+"\">"+"<img src=\""+icon_paths[1]+"\">"+"</a>");
+					$('#character_name2').html(ch_name+"<br><span style=\"font-size : 0.7em;\">"+"<a href=\"http://jp.finalfantasyxiv.com"+ch_info_paths+"\">"+ch_info_texts[9].text()+"</a></span>");
+					$('#character_current_class_icon2').html("<img src=\""+ch_class_icons[0]+"\">");
+					$('#character_level2').html(ch_levels[0]);
+					$('#spirit_logo2').html(icon[0]);
+					$('#spirit_txt2').html(ch_info_texts[1].text()+" "+ ch_info_texts[3].text());
+					$('#grandcompany_logo2').html(icon[2]);
+					$('#grandcompany_txt2').html(ch_info_texts[7].text());
+					$('#character_title2').html(ch_title);
+				
+					$('#fighter_classes2').html(
+						"<table class='chtb'><tr><th width=\"37\" height=\"21\">FIGHTER</th><td class='sicon'><img src=\"" + base_class_imgs[0] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + base_class_levels[0] + "</td><td class='sicon'><img src=\"" + base_class_imgs[1] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + base_class_levels[1] + "</td><td class='sicon'><img src=\"" + base_class_imgs[2] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + base_class_levels[2] + "</td><td class='sicon'><img src=\"" + base_class_imgs[3] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + base_class_levels[3] + "</td></tr><tr><th></th><td class='sicon'><img src=\"" + base_class_imgs[4] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + base_class_levels[4] + "</td><td class='sicon'><img src=\"" + base_class_imgs[5] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + base_class_levels[5] + "</td></tr></table>"
+					);
+					$('#sorcerer_classes2').html(
+						"<table class='chtb'><tr><th>SORCERER</th><td class='sicon'><img src=\"" + base_class_imgs[6] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + base_class_levels[6] + "</td><td class='sicon'><img src=\"" + base_class_imgs[7] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + base_class_levels[7] + "</td><td class='sicon'><img src=\"" + base_class_imgs[8] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + base_class_levels[8] + "</td></tr></table>"
+					);
+					$('#extra_jobs2').html(
+						"<table class='chtb'><tr><th>EXTRA JOB</th><td class='sicon'><img src=\"" + ecg_class_imgs[0] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + ecg_class_levels[0] + "</td><td class='sicon'><img src=\"" + ecg_class_imgs[1] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + ecg_class_levels[1] + "</td><td class='sicon'><img src=\"" + ecg_class_imgs[2] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + ecg_class_levels[2] + "</td></tr></table>"
+					);
+					$('#crafter_classes2').html(
+						"<table class='chtb'><tr><th>CRAFTER</th><td class='sicon'><img src=\"" + ecg_class_imgs[3] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + ecg_class_levels[3] + "</td><td class='sicon'><img src=\"" + ecg_class_imgs[4] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + ecg_class_levels[4] + "</td><td class='sicon'><img src=\"" + ecg_class_imgs[5] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + ecg_class_levels[5] + "</td><td class='sicon'><img src=\"" + ecg_class_imgs[6] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + ecg_class_levels[6] + "</tr></tr><tr><th></th><td class='sicon'><img src=\"" + ecg_class_imgs[7] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + ecg_class_levels[7] + "</td><td class='sicon'><img src=\"" + ecg_class_imgs[8] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + ecg_class_levels[8] + "</td><td class='sicon'><img src=\"" + ecg_class_imgs[9] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + ecg_class_levels[9] + "</td><td class='sicon'><img src=\"" + ecg_class_imgs[10] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + ecg_class_levels[10] + "</td></tr></table>"
+					);
+					$('#gatherer_classes2').html(
+					"<table class='chtb'><tr><th>EXTRA JOB</th><td class='sicon'><img src=\"" + ecg_class_imgs[11] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + ecg_class_levels[11] + "</td><td class='sicon'><img src=\"" + ecg_class_imgs[12] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + ecg_class_levels[12] + "</td><td class='sicon'><img src=\"" + ecg_class_imgs[13] + "\" width=\"24\" height=\"24\" alt=\"\"></td><td class='s'>" + ecg_class_levels[13] + "</td></tr></table>"
+					);
+				}
+			});
+		}
+		
+		// 右側表示時 非表示ボタンクリックで非表示に
+		function noneRight() {
+			document.getElementById("userdata2").style.display="none";
+		}
+  	</script>
+</head>
+<body>
+	<div id="debug"></div>
+	
+	<div id="userdata">
+		<div id="leftpart">
+			<div class="rollbar" style="background:#69C;">
+				<br>
+				<div id="character_title"></div>
+			</div>
+			<div class="chimg">
+				<a class="pop">
+					<div id="character_img"></div>
+				</a>
+				<div class="cjob">
+					<span>CURRENT : </span>
+					<div id="character_current_class_icon"></div>
+					<span class="lv"><div id="character_level"></div></span>
+				</div>
+			</div>
+				
+		<div id="rightpart">
+			<div class="chname">
+				<table>
+					<tr>
+						<th><div id="start_town_logo"></div></th>
+						<td><div id="character_name"></div></td>
+					</tr>
+				</table>
+			</div>
+			<div class="prfdiv">
+				<table class="chprof">
+					<tr>
+						<td class="stone"><div id="spirit_logo"></div></td>
+						<td><div id="spirit_txt"></div></td>
+					</tr>
+				</table>
+				<table class="chgc">
+					<tr>
+						<td class="stone"><div id="grandcompany_logo"></div></td>
+						<td><div id="grandcompany_txt"></div></td>
+					</tr>
+				</table>
+			</div>
+			<div class="skldiv">
+				<div id="fighter_classes"></div>
+				<div id="sorcerer_classes"></div>
+				<div id="extra_jobs"></div>
+				<div id="crafter_classes"></div>
+				<div id="gatherer_classes"></div>
+			</div>
+		</div>
+	</div>
+	<form name="form1" id="id_form1" action="">
+		<input name="textBox1" id="id_textBox1" type="text" value="ロドストのキャラページURL" style="width : 135px; margin: 6px 0 0 12px;"/>
+		<input type="button" value="表示" onclick="getLodestoneInfo(0);" />
+		<input type="button" value="比較" onclick="getLodestoneInfo(1)" />
+		<input type="button" value="初期表示" onclick="getLodestoneInfo(4);" />
+	</form>
+	</div>
+	<div id="userdata2">
+		<div id="leftpart">
+			<div class="rollbar" style="background:#69C;">
+				<br>
+				<div id="character_title2"></div>
+			</div>
+			<div class="chimg">
+				<a class="pop">
+					<div id="character_img2"></div>
+				</a>
+				<div class="cjob">
+					<span>CURRENT : </span>
+					<div id="character_current_class_icon2"></div>
+					<span class="lv"><div id="character_level2"></div></span>
+				</div>
+			</div>
+				
+		<div id="rightpart">
+			<div class="chname">
+				<table>
+					<tr>
+						<th><div id="start_town_logo2"></div></th>
+						<td><div id="character_name2"></div></td>
+					</tr>
+				</table>
+			</div>
+			<div class="prfdiv">
+				<table class="chprof">
+					<tr>
+						<td class="stone"><div id="spirit_logo2"></div></td>
+						<td><div id="spirit_txt2"></div></td>
+					</tr>
+				</table>
+				<table class="chgc">
+					<tr>
+						<td class="stone"><div id="grandcompany_logo2"></div></td>
+						<td><div id="grandcompany_txt2"></div></td>
+					</tr>
+				</table>
+			</div>
+			<div class="skldiv">
+				<div id="fighter_classes2"></div>
+				<div id="sorcerer_classes2"></div>
+				<div id="extra_jobs2"></div>
+				<div id="crafter_classes2"></div>
+				<div id="gatherer_classes2"></div>
+			</div>
+		</div>
+		<form name="form2" id="id_form2" action="">
+		<input name="textBox2" id="id_textBox2"" type="text" value="ロドストのキャラページURL" style="width : 135px; margin: 6px 0 0 12px;"/>
+		<input type="button" value="左側に表示" onclick="getLodestoneInfo(3);" />
+		<input type="button" value="右側を更新" onclick="getLodestoneInfo(2)" />
+		<input type="button" value="右側を非表示" onclick="noneRight();" />
+	</form>
+	</div>
+</body>
+</html>
